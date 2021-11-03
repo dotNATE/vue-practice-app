@@ -4,6 +4,7 @@ import EventLayout from "@/views/event/Layout.vue";
 import EventDetails from "@/views/event/Details.vue";
 import EventRegister from "@/views/event/Register.vue";
 import EventEdit from "@/views/event/Edit.vue";
+import SimpleForm from "@/views/SimpleForm.vue";
 import About from "@/views/About.vue";
 import NotFound from "@/views/NotFound.vue";
 import NetworkError from "@/views/NetworkError.vue";
@@ -58,8 +59,14 @@ const routes = [
         path: "edit",
         name: "EventEdit",
         component: EventEdit,
+        meta: { requireAuth: true },
       },
     ],
+  },
+  {
+    path: "/event/create",
+    name: "EventCreate",
+    component: SimpleForm,
   },
   {
     path: "/event/:afterEvent(.*)",
@@ -97,10 +104,33 @@ const routes = [
 const router = createRouter({
   history: createWebHistory(process.env.BASE_URL),
   routes,
+  scrollBehavior(savedPosition) {
+    if (savedPosition) {
+      return savedPosition;
+    } else {
+      return { top: 0 };
+    }
+  },
 });
 
-router.beforeEach(() => {
+router.beforeEach((to, from) => {
   NProgress.start();
+
+  const notAuthorised = true;
+
+  if (to.meta.requireAuth && notAuthorised) {
+    GStore.flashMessage = "Sorry, you are not authorised to view this page";
+
+    setTimeout(() => {
+      GStore.flashMessage = "";
+    }, 3000);
+
+    if (from.href) {
+      return false;
+    } else {
+      return { path: "/" };
+    }
+  }
 });
 
 router.afterEach(() => {
